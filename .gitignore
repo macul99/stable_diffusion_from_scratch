@@ -1,0 +1,82 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+pip-wheel-metadata/
+
+# Virtualenvs and environment files
+.venv/
+venv/
+env/
+ENV/
+.env
+.env.*
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage
+.tox/
+.nox/
+.coverage
+.coverage.*
+.pytest_cache/
+htmlcov/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# macOS
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Model artifacts, weights, checkpoints and caches
+*.ckpt
+*.pth
+*.pt
+*.safetensors
+*.bin
+*.npz
+checkpoints/
+models/
+weights/
+runs/
+tensorboard/
+wandb/
+hf_cache/
+.cache/
+cache/
+huggingface/
+transformers_cache/
+torch_cache/
+
+# Large data outputs (keep out of git)
+data/
+images/
+outputs/
+samples/
+results/
+
+# Misc
+*.log
+*.tmp
+*.bak
+*.swp
