@@ -32,13 +32,14 @@ class DDPMSampler:
         while len(sqrt_one_minus_alpha_prod.shape) < len(original_samples.shape):
             sqrt_one_minus_alpha_prod = sqrt_one_minus_alpha_prod.unsqueeze(-1)
 
-        # According to the equation (4) in the DDPM paper
+        # According to the equation (4) in the DDPM paper by reparameterization trick
         noise = torch.randn(original_samples.shape, generator=self.generator, device=original_samples.device, dtype=original_samples.dtype)
         noisy_samples = (sqrt_alpha_prod * original_samples) + (sqrt_one_minus_alpha_prod * noise)
 
         return noisy_samples
     
     def step(self, timestep: int, latents: torch.Tensor, model_output: torch.Tensor) -> torch.Tensor:
+        # model_output is the predicted noise by the UNET
         t = timestep
         prev_t = self._get_previous_timestep(timestep)
 
@@ -51,14 +52,15 @@ class DDPMSampler:
         current_beta_t = 1 - current_alpha_t
 
         # Compute the predicted original sample using formula (15) of the DDPM paper
-        pred_original_sample = (latents - beta_prod_t ** 0.5 * model_output) / (alpha_prod_t ** 0.5) # X0 predicted
+        # actually reparameterization trick of equation (4)
+        pred_original_sample = (latents - beta_prod_t ** 0.5 * model_output) / (alpha_prod_t ** 0.5) # x_0 predicted
 
         # Compute the coefficients for pred_original_sample and current sample x_t
         pred_original_sample_coeff = (alpha_prod_t_prev ** 0.5 * current_beta_t) / beta_prod_t
         current_sample_coeff = current_alpha_t ** 0.5 * beta_prod_t_prev / beta_prod_t
 
         # compute the predicted previous sample mean
-        pred_prev_sample = pred_original_sample_coeff * pred_original_sample + current_sample_coeff * latents
+        pred_prev_sample = pred_original_sample_coeff * pred_original_sample + current_sample_coeff * latents # latents is x_t
 
         variance = 0
         if t> 0:

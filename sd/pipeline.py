@@ -9,10 +9,15 @@ LATENTS_WIDTH = WIDTH // 8
 LATENTS_HEIGHT = HEIGHT // 8
 
 def generate(
-    prompt: str, uncond_prompt: str, input_image=None, 
+    prompt: str, uncond_prompt: str, 
+    input_image=None, 
     strength=0.8, # higher to add more noise
     do_cfg=True, # classifier free guidance
-    cfg_scale=7.5, sampler_name='ddmp', n_inference_steps=50, models={}, seed=None,
+    cfg_scale=7.5, 
+    sampler_name='ddpm', 
+    n_inference_steps=50, 
+    models={}, 
+    seed=None,
     device=None,
     idle_device=None,
     tokenizer=None
@@ -45,7 +50,7 @@ def generate(
             ).input_ids  # (Batch_Size, 77)
             cond_tokens = torch.tensor(cond_tokens, dtype=torch.long, device=device)
 
-            # (Batch_Size, 77, Dim)
+            # (Batch_Size, 77, Dim) - batch_size = 1
             cond_context = clip(cond_tokens)
 
             uncond_tokens = tokenizer.batch_encode_plus(
@@ -56,7 +61,7 @@ def generate(
             # (Batch_Size, 77, Dim)
             uncond_context = clip(uncond_tokens)
 
-            # (Batch_Size, Seq_Len, Dim) + (Batch_Size, Seq_Len, Dim) -> (2 * Batch_Size, Seq_Len, Dim)
+            # (Batch_Size, Seq_Len, Dim) + (Batch_Size, Seq_Len, Dim) -> (2, Seq_Len, Dim)
             context = torch.cat([cond_context, uncond_context], dim=0)
         else:
             tokens = tokenizer.batch_encode_plus(

@@ -4,6 +4,7 @@ from torch.nn import functional as F
 from attention import SelfAttention
 
 class CLIPEmbedding(nn.Module):
+    # token embedding + position embedding
 
     def __init__(self, n_vocab: int, n_embd: int, n_tokens: int):
         super().__init__()
@@ -19,6 +20,7 @@ class CLIPEmbedding(nn.Module):
         return x
     
 class CLIPLayer(nn.Module):
+    # self-attention + MLP with layer norm and skip connection
     def __init__(self, n_heads: int, n_embd: int):
         super().__init__()
 
@@ -46,7 +48,7 @@ class CLIPLayer(nn.Module):
         return x
 
 class CLIP(nn.Module):
-
+    # Embedding + 12 x CLIPLayer + LayerNorm
     def __init__(self):
         super().__init__()
         self.embedding = CLIPEmbedding(49408, 768, 77)

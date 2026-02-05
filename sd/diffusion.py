@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from attention import SelfAttention, CrossAttention
 
 class TimeEmbedding(nn.Module):
-
+    # Linear + SiLU + Linear
     def __init__(self, n_embd: int):
         super().__init__()
 
@@ -20,6 +20,7 @@ class TimeEmbedding(nn.Module):
         return x  # (1, 320)
 
 class UNET_ResidualBlock(nn.Module):
+    # input include image and time embedding
     def __init__(self, in_channels: int, out_channels: int, n_time=1280):
         super().__init__()
         self.groupnorm_feature = nn.GroupNorm(32, in_channels)
@@ -61,6 +62,8 @@ class UNET_ResidualBlock(nn.Module):
         return merged + self.residual_layer(residue)  # (Batch_Size, out_channels, Height, Width)
 
 class UNET_AttentionBlock(nn.Module):
+    # input include image and prompt context
+    # image self-attention + cross-attention with prompt + feed-forward network
     def __init__(self, n_head: int, n_embd: int, d_context=768):
         super().__init__()
         channels = n_head * n_embd
@@ -132,7 +135,7 @@ class Upsample(nn.Module):
         # (Batch_Size, Features, Height, Width) -> (Batch_Size, Features, Height*2, Width*2)
         x = F.interpolate(x, scale_factor=2, mode='nearest')
         return self.conv(x)
-    
+
 class SwitchSequential(nn.Sequential):
     def forward(self, x: torch.Tensor, context: torch.Tensor, time: torch.Tensor) -> torch.Tensor:
         for layer in self:
@@ -143,8 +146,6 @@ class SwitchSequential(nn.Sequential):
             else:
                 x = layer(x)
         return x
-
-        
 
 class UNET(nn.Module):
 
@@ -202,6 +203,23 @@ class UNET(nn.Module):
             SwitchSequential(UNET_ResidualBlock(640, 320), UNET_AttentionBlock(8, 40)),
             SwitchSequential(UNET_ResidualBlock(640, 320), UNET_AttentionBlock(8, 40)),
         ])
+
+    def forward(self, x, context, time):
+        # x: (Batch_Size, 4, Height/8, Width/8)
+        # context: (Batch_Size, Seq_Len, D_Embed) # Seq_Len=77, D_Embed=768
+        # time: (1, 320)
+        skip_connections = []
+        for layers in self.encoders:
+            x = layers(x, context, time)
+            skip_connections.append(x)
+
+        x = self.bottleneck(x, context, time)
+
+        for layers in self.decoders:
+            x = torch.cat([x, skip_connections.pop()], dim=1)
+            x = layers(x, context, time)
+
+        return x
 
 class UNET_OutputLayer(nn.Module):
     def __init__(self, in_channels: int, out_channels: int):

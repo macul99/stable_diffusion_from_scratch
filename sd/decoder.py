@@ -5,6 +5,7 @@ from attention import SelfAttention
 
 class VAE_AttentionBlock(nn.Module):
     # attention on channels, and treat pixels location as sequence
+    # groupnorm + self-attention with skip connection
     def __init__(self, channels: int):
         super().__init__()
 
@@ -15,6 +16,8 @@ class VAE_AttentionBlock(nn.Module):
         # x: (Batch_Size, Channels, Height, Width)
 
         residual = x
+
+        x = self.groupnorm(x)
 
         n, c, h, w = x.shape
 
@@ -31,6 +34,8 @@ class VAE_AttentionBlock(nn.Module):
 
 
 class VAE_ResidualBlock(nn.Module):
+    # able to change number of channels
+    # 2 x (groupnorm + silu + conv) + residual layer for channel mismatch, with single skip connection
     def __init__(self, in_channels, out_channels):
         super().__init__()
         self.groupnorm_1 = nn.GroupNorm(32, in_channels)

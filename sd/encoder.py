@@ -86,12 +86,12 @@ class VAE_Encoder(nn.Sequential):
         # (Batch_Size, 4, Height/8, Width/8)
         log_varaince = torch.clamp(log_varaince, min=-30.0, max=20.0)
 
-        variance = log_varaince.exp()
+        variance = log_varaince.exp() # exp makes sure variance is positive
 
         stdev = variance.sqrt()
 
         # Z=N(0, 1) -> N(mean, variance)
-        x = mean + stdev * noise
+        x = mean + stdev * noise # reparameterization trick
 
         # Scale the output by a constant factor
         x = x * 0.18215
